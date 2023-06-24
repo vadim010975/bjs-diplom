@@ -1,20 +1,11 @@
+'use strict'
+
 const logoutButton = new LogoutButton();
-logoutButton.action = () => {
-  ApiConnector.logout(answer => answer ? location.reload() : false);
-}
-
-ApiConnector.current(answer => answer.success ? ProfileWidget.showProfile(answer.data) : false);
-
+const favoritesWidget = new FavoritesWidget();
 const ratesBoard = new RatesBoard();
-ApiConnector.getStocks(answer => {
-  if (answer.success) {
-    ratesBoard.clearTable();
-    ratesBoard.fillTable(answer.data);
-  }
-});
-
 const moneyManager = new MoneyManager();
-const showProfileAndMassage = function (str, obj) {
+
+const showProfileAndMessage = function (str, obj) {
   if (obj.success) {
     ProfileWidget.showProfile(obj.data);
     this.setMessage(obj.success, str);
@@ -23,19 +14,6 @@ const showProfileAndMassage = function (str, obj) {
   }
 }
 
-moneyManager.addMoneyCallback = data => {
-  ApiConnector.addMoney(data, showProfileAndMassage.bind(moneyManager, 'Ок. Пополнение счета выполнено!'));
-}
-
-moneyManager.conversionMoneyCallback = data => {
-  ApiConnector.convertMoney(data, showProfileAndMassage.bind(moneyManager, 'Ок. Конвертирование валюты выполнено!'));
-}
-
-moneyManager.sendMoneyCallback = data => {
-  ApiConnector.transferMoney(data, showProfileAndMassage.bind(moneyManager, 'Ок. Перевод средств выполнен!'));
-}
-
-const favoritesWidget = new FavoritesWidget();
 const fillTableAndUpdateUsersList = function (obj) {
   if (obj.success) {
     this.clearTable();
@@ -44,7 +22,29 @@ const fillTableAndUpdateUsersList = function (obj) {
   }
 }
 
-ApiConnector.getFavorites(fillTableAndUpdateUsersList.bind(favoritesWidget));
+const showTable = () => ApiConnector.getStocks((response) => {
+  if (response.success) {
+    ratesBoard.clearTable();
+    ratesBoard.fillTable(response.data);
+  }
+});
+
+logoutButton.action = () => {
+  clearInterval(interval);
+  ApiConnector.logout(response => response && location.reload());
+}
+
+moneyManager.addMoneyCallback = data => {
+  ApiConnector.addMoney(data, showProfileAndMessage.bind(moneyManager, 'Ок. Пополнение счета выполнено!'));
+}
+
+moneyManager.conversionMoneyCallback = data => {
+  ApiConnector.convertMoney(data, showProfileAndMessage.bind(moneyManager, 'Ок. Конвертирование валюты выполнено!'));
+}
+
+moneyManager.sendMoneyCallback = data => {
+  ApiConnector.transferMoney(data, showProfileAndMessage.bind(moneyManager, 'Ок. Перевод средств выполнен!'));
+}
 
 favoritesWidget.addUserCallback = data => {
   ApiConnector.addUserToFavorites(data, fillTableAndUpdateUsersList.bind(favoritesWidget));
@@ -53,3 +53,14 @@ favoritesWidget.addUserCallback = data => {
 favoritesWidget.removeUserCallback = data => {
   ApiConnector.removeUserFromFavorites(data, fillTableAndUpdateUsersList.bind(favoritesWidget));
 }
+
+ApiConnector.current(response => response.success && ProfileWidget.showProfile(response.data));
+
+showTable();
+
+let interval = setInterval(() => {
+  showTable();
+}, 60000);
+
+ApiConnector.getFavorites(fillTableAndUpdateUsersList.bind(favoritesWidget));
+

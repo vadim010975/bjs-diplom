@@ -2,9 +2,9 @@
 
 const userForm = new UserForm();
 userForm.loginFormCallback = function(data) {
-  ApiConnector.login(data, answer => answer.success ? location.reload() : this.setLoginErrorMessage(answerwer.error));
+  ApiConnector.login(data, response => response.success ? location.reload() : this.setLoginErrorMessage(responsewer.error));
 }
 userForm.registerFormCallback = function(data) {
-  ApiConnector.register(data, answer => answer.success ? location.reload() : this.setRegisterErrorMessage(answerwer.error));
+  ApiConnector.register(data, response => response.success ? location.reload() : this.setRegisterErrorMessage(responsewer.error));
 }
 
